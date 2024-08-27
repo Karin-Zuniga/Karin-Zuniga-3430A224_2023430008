@@ -2,6 +2,7 @@
 #include <string>
 using namespace std;
 
+// Creacion de estructura
 struct Paciente {
     string nombre;
     int edad;
@@ -10,6 +11,8 @@ struct Paciente {
 };
 
 int main () {
+
+    //Creacion de pacientes
     Paciente paciente_1;
     paciente_1.nombre = "Maria";
     paciente_1.edad = 45;
@@ -28,6 +31,8 @@ int main () {
     paciente_3.peso = 88.0;
     paciente_3.altura = 1.80;
 
+
+    // imprime pacientes
     cout << "Nombre paciente: " << paciente_1.nombre << "\n";
     cout << "Edad: " << paciente_1.edad << "\n";
     cout << "Peso: " << paciente_1.peso << "\n";
