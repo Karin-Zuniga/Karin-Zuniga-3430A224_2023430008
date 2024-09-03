@@ -63,6 +63,9 @@ int main () {
     int opcion;
     
     Paciente* head = nullptr;
+    agregarPaciente(head, "Alicia", 23, 59.5, 1.60);
+    agregarPaciente(head, "Maria", 76, 67.5, 1.65);
+    agregarPaciente(head, "Juan", 43, 67.3, 1.8);
 
     while ( menu != 0)
     {
