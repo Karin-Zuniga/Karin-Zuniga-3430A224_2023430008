@@ -1,3 +1,4 @@
+
 #include <iostream>
 #include <string>
 #include <fstream>
@@ -8,140 +9,200 @@ using namespace std;
 struct Paciente {
     string nombre;
     int edad;
-    double peso;
     double altura;
+    double peso;
+    double azucar;
     double indice;
     Paciente* next; //se agrega puntero
 };
-//Funcion para agregar
-void agregarPaciente(Paciente*& head, const string& nombre, int edad, double peso, double altura){
-    Paciente* nuevoPaciente = new Paciente();
-    nuevoPaciente->nombre = nombre;
-    nuevoPaciente->edad = edad;
-    nuevoPaciente->peso = peso;
-    nuevoPaciente->altura = altura;
-    nuevoPaciente->indice = peso / (altura*altura);
-    nuevoPaciente->next = head;
-    head = nuevoPaciente;
+// Estructura de la cola
+struct Cola {
+    Paciente* primero; 
+    Paciente* final;  
+    int tamanio;       
+
+    // Constructor de la cola
+    Cola() {
+        primero = nullptr;
+        final = nullptr;
+        tamanio = 0;
+    }
+};
+
+// Función para verificar si la cola está vacía o llena
+bool estaVacia(Cola& cola) {
+    return cola.primero == nullptr;
 }
-//funcion para eliminar paciente
-void eliminarPaciente(Paciente*& head, const string& nombre){
-    Paciente* actual = head;
+
+bool estaLlena(Cola& cola) {
+    return cola.tamanio == 10;
+}
+
+
+
+int compararCaracteristicas(double azucar, double indice){
+    int gravedad_azucar;
+    double gravedad;
+    if (azucar < 5.7) 
+    {
+        gravedad_azucar = 0;
+    }
+    else if (azucar >= 5.7 && azucar <= 6.5)
+    {
+        gravedad_azucar = 1;
+    }
+    else
+    {
+        gravedad_azucar = 2;
+
+    }
+    gravedad = gravedad_azucar * indice;
+    return gravedad;
+}
+//elimina ultimo paciente
+void eliminarPacienteFinal(Cola& cola){
+     Paciente* actual = cola.primero;
     Paciente* anterior = nullptr;
 
-    while (actual != nullptr && actual->nombre != nombre){
+    while (actual->next != nullptr) {
         anterior = actual;
         actual = actual->next;
     }
-    
-    if (actual != nullptr){
-        if (anterior == nullptr)
-       {
-        head = actual->next;
-        }
-        else
-        {
-            anterior->next = actual->next;
-        }
-        delete actual;
-        
-        
-    }
+
+    delete actual;
+    anterior->next = nullptr;
 }
+// funcion para encolar
+void agregarPacienteCola(Cola& cola, const string& nombre, int edad, double altura, double peso, double azucar) {
+    
+    if (estaLlena(cola) == true) {
+        return;
+    }
+
+    Paciente* nuevoPaciente = new Paciente();
+    nuevoPaciente->nombre = nombre;
+    nuevoPaciente->edad = edad;
+    nuevoPaciente->altura = altura;
+    nuevoPaciente->peso = peso;
+    nuevoPaciente->azucar = azucar;
+    nuevoPaciente->indice = peso / (altura * altura);
+    nuevoPaciente->next = nullptr;
+
+    double caracteristica = compararCaracteristicas(nuevoPaciente->azucar, nuevoPaciente->indice);
+    
+    if (estaVacia(cola) == true|| compararCaracteristicas(cola.primero->azucar, cola.primero->indice) > caracteristica ) {
+        cola.primero = nuevoPaciente;
+        cola.final = nuevoPaciente;
+    } else {
+        Paciente* actual = cola.primero;
+        while (actual->next != nullptr && compararCaracteristicas(actual->next->azucar, actual->next->indice >= caracteristica)) 
+        {
+            actual = actual->next;
+        }
+        nuevoPaciente->next = actual->next;
+        actual->next = nuevoPaciente;
+        cola.tamanio++;
+        if (estaLlena(cola) == true){
+            eliminarPacienteFinal(cola);
+        }
+    }
+
+    
+}
+
+//funcion para eliminar paciente
+void eliminarPacienteCola(Cola& cola){
+    if (estaVacia(cola)) {
+        cout << "La cola está vacía.\n";
+        return;
+    }
+
+    Paciente* temp = cola.primero;
+    cola.primero = cola.primero->next;
+    if (cola.primero == nullptr) {
+        cola.final = nullptr;
+    }
+
+    cout << "Paciente removido: " << temp->nombre << "\n";
+    delete temp;
+    cola.tamanio--;
+}
+
+
 //funcion para mostrar todos los paciente
-void imprimirPaciente(const Paciente* head){
-    const Paciente* actual = head;
+void imprimirPaciente(Cola& cola){
+    if (estaVacia(cola)) {
+        cout << "La cola está vacía.\n";
+        return;
+    }
+
+    Paciente* actual = cola.primero;
     while (actual != nullptr) {
         cout << "Nombre paciente: " << actual->nombre << "\n";
         cout << "Edad: " << actual->edad << "\n";
         cout << "Peso: " << actual->peso << "\n";
         cout << "Altura: " << actual->altura << "\n";
         cout << "IMC: " << actual->indice << "\n";
-        cout << "---------------- \n";
+        cout << "A1C: " << actual->azucar << "%\n";
+        cout << "---------------- \n" << endl;
         actual = actual->next;        
 
     }
 }
 
-//funcion para buscar pacientes
-void buscarPaciente(Paciente*& head, const string& nombre) {
-    Paciente* actual = head;
+//funcion para buscar pacientes con IMC y A1C
+void buscarPacienteNumero(Cola& cola, double cifra, int tipo) {
+    Paciente* actual = cola.primero;
     Paciente* anterior = nullptr;
-    while (actual != nullptr && actual->nombre != nombre){
-        anterior = actual;
-        actual = actual->next;
-    }
-    
-    if (actual != nullptr){
-        if (anterior == nullptr)
-        {
-        head = actual->next;
-        }
-        else
-        {
-            anterior->next = actual->next;
-        }
-        cout << "Nombre paciente: " << actual->nombre << "\n";
-        cout << "Edad: " << actual->edad << "\n";
-        cout << "Peso: " << actual->peso << "\n";
-        cout << "Altura: " << actual->altura << "\n";
-        cout << "IMC: " << actual->indice << "\n";
-        cout << "---------------- \n";
-        actual = actual->next;
-        
-        
-    }
-}
-//calcula y entrega promedio de peso o edad
-void promedio(Paciente*&head, string caracteristica){
-    const Paciente* actual = head;
-    int suma;
-    int contador;
-    contador = 0;
-    suma = 0;
-    double promedio;
-
+    bool encontrado = false;
 
     while (actual != nullptr){
-        if (caracteristica == "peso")
+        if (tipo == 1 && actual->indice == cifra || tipo == 2 && actual->azucar == cifra)
         {
-            suma = suma + actual->peso;
-            contador += 1;
-            actual = actual->next;
+            cout << "Nombre paciente: " << actual->nombre << "\n";
+            cout << "Edad: " << actual->edad << "\n";
+            cout << "Peso: " << actual->peso << "\n";
+            cout << "Altura: " << actual->altura << "\n";
+            cout << "IMC: " << actual->indice << "\n";
+            cout << "A1C: " << actual->azucar << "%\n";
+            cout << "---------------- \n";
+            encontrado = true;
         }
-        else if (caracteristica == "edad")
-        {
-            suma = suma + actual->edad;
-            contador += 1;
-            actual = actual->next;
-        }
-        else
-        {
-            cout << "Algo no funciono \n";
-        }
-
+        actual = actual->next;
     }
-    promedio = suma / contador;
-
-    if (caracteristica == "peso")
-    {
-        cout << "El promedio de peso es: " << promedio << " \n";
-        
+    if (!encontrado) {
+        cout << "No se encontró paciente.\n";
     }
-    else if (caracteristica == "edad")
-    {
-        cout << "El promedio de edad es: " << promedio << " \n";
-      
-    }
-    else
-    {
-        cout << "Algo no funciono \n";
-    } 
     
+}
+//buscar paciente por nombre
+void buscarPaciente(Cola& cola, const string& nombre) {
+    Paciente* actual = cola.primero;
+    bool encontrado = false;
+
+    while (actual != nullptr) {
+        if (actual->nombre == nombre) {
+            cout << "Nombre paciente: " << actual->nombre << "\n";
+            cout << "Edad: " << actual->edad << "\n";
+            cout << "Peso: " << actual->peso << "\n";
+            cout << "Altura: " << actual->altura << "\n";
+            cout << "IMC: " << actual->indice << "\n";
+            cout << "A1C: " << actual->azucar << "%\n";
+            cout << "---------------- \n";
+            encontrado = true;
+            break; 
+        }
+        actual = actual->next;
+    }
+
+    if (!encontrado) {
+        cout << "No se encontró paciente.\n";
+    }
+
 }
 
 // Agregar csv
-void cargarCsv(Paciente*&head, string nombre_archivo)
+void cargarCsv(Cola& cola, string nombre_archivo)
 {
     ifstream archivo(nombre_archivo);
     if (!archivo.is_open()) {
@@ -157,6 +218,7 @@ void cargarCsv(Paciente*&head, string nombre_archivo)
         int edad;
         double altura;
         double peso;
+        double azucar;
         
         
         getline(ss, nombre, ',');
@@ -168,7 +230,11 @@ void cargarCsv(Paciente*&head, string nombre_archivo)
         ss.ignore();
         ss >> peso;
         
-        agregarPaciente(head, nombre, edad, peso, altura);
+        ss.ignore();
+        ss >> azucar;
+        
+        agregarPacienteCola(cola, nombre, edad, altura, peso, azucar);
+
     }
 
     archivo.close(); 
@@ -178,67 +244,69 @@ void cargarCsv(Paciente*&head, string nombre_archivo)
 int main () {
     int menu = 1;
     int opcion;
-    
-    Paciente* head = nullptr;
-    agregarPaciente(head, "Alicia", 23, 59.5, 1.60);
-    agregarPaciente(head, "Maria", 76, 67.5, 1.65);
-    agregarPaciente(head, "Juan", 43, 67.3, 1.8);
+
+
+    Cola cola;
+    cargarCsv(cola, "patient_list.csv");
 
     while ( menu != 0)
     {
         cout << "Bienvenido, que desea hacer? \n";
         cout << "0. Salir\n";
-        cout << "1. Agregar Paciente \n";
-        cout << "2. Mostrar informacion \n";
-        cout << "3. Eliminar Paciente \n";
-        cout << "4. Promedio de edad \n";
-        cout << "5. Promedio de peso \n";
-        cout << "6. Cargar csv \n" << endl;
+        cout << "1. Mostrar informacion \n";
+        cout << "2. Eliminar Paciente \n";
+
+        
         cin >> opcion;
 
         if (opcion == 0)
         {
             break;
         }
-        //opcion 1. agrega datos nuevo paciente
-        else if (opcion == 1)
-        {
-            string nombre;
-            int edad;
-            double peso;
-            double altura;
-            cout << "Nombre \n";
-            cin >> nombre;
-            cout << "edad \n";
-            cin >> edad;
-            cout << "peso \n";
-            cin >> peso;
-            cout << "altura \n";
-            cin >> altura;
-
-            agregarPaciente(head, nombre, edad, peso, altura);
-
-        } 
+           
         //pide selecciona al paciente por el nombre
-        else if (opcion == 2)
+        else if (opcion == 1)
         {
             int mostrar;
             string seleccion;
+            double seleccion_num;
             cout << "1. buscar por nombre\n";
-            cout << "2. mostrar todo\n" << endl;
+            cout << "2. buscar por IMC\n";
+            cout << "3. buscar por A1C\n";
+            cout << "4. mostrar todo\n" << endl;
             cin >> mostrar;
             // busca por nombre
             if (mostrar == 1) {
                 cout << "Indique el nombre\n" << endl;
                 cin >> seleccion;
-                buscarPaciente(head, seleccion);
+                buscarPaciente(cola, seleccion);
 
             }
-            //imprime la totalidad de los pacientes
+            //buscar por IMC
             else if (mostrar == 2)
             {
-                imprimirPaciente(head);
+            
+                cout << "Indique el IMC\n" << endl;
+                cin >> seleccion_num;
+                buscarPacienteNumero(cola, seleccion_num, 1);
+                
             }
+            //buscar por A1C
+            else if (mostrar == 3)
+            {
+            
+                cout << "Indique el A1C\n" << endl;
+                cin >> seleccion_num;
+                buscarPacienteNumero(cola, seleccion_num, 2);
+                
+            }
+
+            //imprime la totalidad de los pacientes
+            else if (mostrar == 4)
+            {
+                imprimirPaciente(cola);
+            }
+        
             else
             {
                 cout << "numero no valido\n" << endl;
@@ -247,48 +315,24 @@ int main () {
 
 
         //elimina pidiendo el nombre del sujeto a eliminar
-        else if (opcion == 3)
+        else if (opcion == 2)
         {
-            string nombre;
-            cout << "Indique el nombre\n";
-            cin >> nombre;
-
-            eliminarPaciente(head, nombre);
+            eliminarPacienteCola(cola);
         }
-        else if (opcion == 4)
-        {
-            promedio(head, "edad");
-        }
-        else if (opcion == 5)
-        {
-            promedio(head, "peso");
-        }
-        else if (opcion == 6)
-        {
-            string nombre_archivo;
-            cout << "Ingrese el nombre del archivo: \n";
-            cin >> nombre_archivo;
-            cargarCsv(head, nombre_archivo);
-        }
+         
+        
+        
         else
         {
             cout << "opcion no valida\n";
         }
-        
-        
-        
-        
-            
-            
-                      
-        
-        
+               
 
     }
     //liberar memoria
-    while (head != nullptr) {
-        Paciente* temp = head;
-        head = head->next;
+    while (cola.primero != nullptr) {
+        Paciente* temp = cola.primero;
+        cola.primero = cola.primero->next;
         delete temp;
     }
     return 0;
